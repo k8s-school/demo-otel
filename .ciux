@@ -1,0 +1,5 @@
+apiVersion: v1alpha1
+dependencies:
+  - package: github.com/k8s-school/ktbx@v1.1.3-rc9
+    labels:
+      e2e: "true"

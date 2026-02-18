@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Read(//home/fjammes/src/github.com/k8s-school/demo-nginx-controller/**)",
+      "Bash(./install-k8s.sh:*)",
+      "Bash(go mod:*)",
+      "Bash(./setup.sh:*)",
+      "Bash(go build:*)",
+      "Bash(kubectl get pods:*)",
+      "Bash(kubectl logs:*)",
+      "Bash(kubectl apply:*)",
+      "Bash(kubectl rollout restart:*)",
+      "Bash(kubectl wait:*)",
+      "Bash(kubectl get svc:*)",
+      "Bash(./scripts/generate-load.sh:*)",
+      "WebFetch(domain:opentelemetry.io)",
+      "Bash(/home/fjammes/src/github.com/k8s-school/demo-otel/deploy-otel-demo.sh:*)",
+      "Bash(ciux ignite:*)",
+      "Bash(./deploy-otel-demo.sh:*)",
+      "Bash(./setup-prereq.sh:*)",
+      "Bash(helm version:*)",
+      "Bash(kubectl config:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

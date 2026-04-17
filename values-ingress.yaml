@@ -1,0 +1,19 @@
+# NGINX Ingress Controller configuration
+controller:
+  service:
+    type: NodePort
+  ingressClassResource:
+    default: true
+
+# OpenTelemetry Demo configuration
+components:
+  frontend-proxy:
+    ingress:
+      enabled: true
+      annotations: {}
+      hosts:
+        - host: otel-demo.my-domain.com
+          paths:
+            - path: /
+              pathType: Prefix
+              port: 8080

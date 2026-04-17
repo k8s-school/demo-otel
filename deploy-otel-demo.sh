@@ -13,6 +13,7 @@ CLUSTER_NAME="otel-demo"
 CONTEXT_NAME="kind-otel-demo"
 NAMESPACE="otel-demo"
 DEMO_RELEASE_NAME="my-otel-demo"
+DEMO_CHART_VERSION="0.40.3"
 
 # Function to print colored output
 print_info() {
@@ -111,20 +112,27 @@ setup_helm() {
 deploy_demo() {
     print_info "Deploying OpenTelemetry demo..."
 
-    # Create namespace
-    kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
-
     # Install or upgrade demo
-    if helm list -n "$NAMESPACE" | grep -q "$DEMO_RELEASE_NAME"; then
-        print_info "Demo already exists, upgrading..."
-        helm upgrade "$DEMO_RELEASE_NAME" open-telemetry/opentelemetry-demo -n "$NAMESPACE"
-    else
-        print_info "Installing OpenTelemetry demo..."
-        helm install "$DEMO_RELEASE_NAME" open-telemetry/opentelemetry-demo -n "$NAMESPACE"
-    fi
+    print_info "Installing/upgrading OpenTelemetry demo (version $DEMO_CHART_VERSION)..."
+    helm upgrade --install "$DEMO_RELEASE_NAME" open-telemetry/opentelemetry-demo \
+        --version "$DEMO_CHART_VERSION" \
+        --create-namespace \
+        -n "$NAMESPACE" \
+        -f values-ingress.yaml
 
     # Wait for deployment to be ready
     wait_for_pods "$NAMESPACE" 600
+
+    # Add ingress host to /etc/hosts
+    print_info "Adding otel-demo.my-domain.com to /etc/hosts..."
+    NODE_IP=$(kubectl get nodes otel-demo-worker -o=jsonpath='{.status.addresses[0].address}')
+    txeh_bin=$(which txeh)
+    if [ -z "$txeh_bin" ]; then
+        print_error "txeh is not installed. Please install txeh to manage /etc/hosts entries"
+    else
+        print_info "Using txeh to add host entry for otel-demo.my-domain.com"
+        sudo $txeh_bin add "$NODE_IP" otel-demo.my-domain.com
+    fi
 }
 
 # Function to setup port forwarding
@@ -135,18 +143,9 @@ setup_port_forwarding() {
     pkill -f "kubectl port-forward" || true
     sleep 2
 
-    # Get the frontend service
-    local frontend_service
-    frontend_service=$(kubectl get svc -n "$NAMESPACE" -l app.kubernetes.io/component=frontend -o jsonpath='{.items[0].metadata.name}')
-
-    if [ -z "$frontend_service" ]; then
-        print_error "Frontend service not found"
-        return 1
-    fi
-
     # Start port forwarding in background
     print_info "Starting port forwarding for web store (http://localhost:8080)..."
-    kubectl port-forward -n "$NAMESPACE" "svc/$frontend_service" 8080:8080 > /dev/null 2>&1 &
+    kubectl port-forward -n "$NAMESPACE" svc/frontend-proxy 8080:8080 > /dev/null 2>&1 &
 
     # Start port forwarding for other services
     local grafana_service

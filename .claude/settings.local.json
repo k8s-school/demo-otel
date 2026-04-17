@@ -20,7 +20,14 @@
       "Bash(./deploy-otel-demo.sh:*)",
       "Bash(./setup-prereq.sh:*)",
       "Bash(helm version:*)",
-      "Bash(kubectl config:*)"
+      "Bash(kubectl config:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(helm search repo open-telemetry/opentelemetry-demo --versions)",
+      "Bash(./install-ingress.sh)",
+      "Bash(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}')",
+      "Bash(kubectl get nodes --selector=\"!node-role.kubernetes.io/control-plane\" -o jsonpath='{.items[0].status.addresses[?(@.type==\"\"InternalIP\"\")].address}')",
+      "Bash(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane' -o jsonpath='{.items[0].status.addresses[?(@.type==\"\"InternalIP\"\")].address}')",
+      "Bash(sudo txeh add 172.18.0.5 otel-demo.my-domain.com)"
     ],
     "deny": [],
     "ask": []

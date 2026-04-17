@@ -90,6 +90,20 @@ create_k8s_cluster() {
     print_info "Cluster '$CLUSTER_NAME' is ready"
 }
 
+# Function to install ingress controller
+install_ingress_controller() {
+    print_info "Installing NGINX Ingress Controller..."
+
+    # Check if install script exists
+    if [ ! -f "./install-ingress.sh" ]; then
+        print_error "Ingress installation script not found"
+        return 1
+    fi
+
+    # Run the ingress installation script
+    ./install-ingress.sh
+}
+
 # Function to verify prerequisites
 verify_prerequisites() {
     print_info "Verifying prerequisites..."
@@ -118,6 +132,14 @@ verify_prerequisites() {
     else
         print_error "✗ Helm is not available"
         return 1
+    fi
+
+    # Check ingress controller
+    if kubectl get pods -n ingress-nginx -l app.kubernetes.io/instance=ingress-nginx --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l | grep -q "^[1-9]"; then
+        print_info "✓ NGINX Ingress Controller is running"
+    else
+        print_warning "✗ NGINX Ingress Controller is not running"
+        print_info "Run with 'ingress-only' to install it separately"
     fi
 }
 
@@ -157,6 +179,7 @@ main() {
             check_system_requirements
             install_helm
             create_k8s_cluster
+            install_ingress_controller
             verify_prerequisites
             print_info "Prerequisites setup completed successfully!"
             print_info "You can now run './deploy-otel-demo.sh' to deploy the OpenTelemetry demo"
@@ -173,12 +196,17 @@ main() {
             install_helm
             print_info "Helm installation completed!"
             ;;
+        "ingress-only")
+            install_ingress_controller
+            print_info "NGINX Ingress Controller installation completed!"
+            ;;
         *)
-            echo "Usage: $0 [setup|verify|cluster-only|helm-only]"
-            echo "  setup       - Complete prerequisites setup (default)"
-            echo "  verify      - Verify prerequisites are installed"
+            echo "Usage: $0 [setup|verify|cluster-only|helm-only|ingress-only]"
+            echo "  setup        - Complete prerequisites setup (default)"
+            echo "  verify       - Verify prerequisites are installed"
             echo "  cluster-only - Create Kubernetes cluster only"
-            echo "  helm-only   - Install Helm only"
+            echo "  helm-only    - Install Helm only"
+            echo "  ingress-only - Install NGINX Ingress Controller only"
             exit 1
             ;;
     esac
